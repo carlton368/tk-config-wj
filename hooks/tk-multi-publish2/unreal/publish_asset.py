@@ -20,6 +20,11 @@ _OS_LOCAL_STORAGE_PATH_FIELD = {
 
 HookBaseClass = sgtk.get_hook_baseclass()
 
+print("PUBLISH_ASSET LOADING")
+if 'WONJIN_PUBLISH_ASSET' in os.environ:
+    os.environ['WONJIN_PUBLISH_ASSET'] += os.pathsep + 'PUBLISH_ASSET_LOADING'
+else:
+    os.environ['WONJIN_PUBLISH_ASSET'] = 'PUBLISH_ASSET_LOADING'
 
 class UnrealAssetPublishPlugin(HookBaseClass):
     """
@@ -34,7 +39,14 @@ class UnrealAssetPublishPlugin(HookBaseClass):
     To learn more about writing a publisher plugin, visit
     http://developer.shotgunsoftware.com/tk-multi-publish2/plugin.html
     """
-
+    def __init__(self, *args, **kwargs):
+        super(UnrealAssetPublishPlugin, self).__init__(*args, **kwargs)
+        print("PUBLISH_ASSET INIT")
+        if 'WONJIN_PUBLISH_ASSET' in os.environ:
+            os.environ['WONJIN_PUBLISH_ASSET'] += os.pathsep + 'PUBLISH_ASSET_INIT'
+        else:
+            os.environ['WONJIN_PUBLISH_ASSET'] = 'PUBLISH_ASSET_INIT'
+            
     # NOTE: The plugin icon and name are defined by the base file plugin.
 
     @property

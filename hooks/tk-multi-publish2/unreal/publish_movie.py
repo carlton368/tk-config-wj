@@ -24,7 +24,11 @@ _OS_LOCAL_STORAGE_PATH_FIELD = {
 
 HookBaseClass = sgtk.get_hook_baseclass()
 
-
+print("PUBLISH_MOVIE LOADING")
+if 'WONJIN_PUBLISH_MOVIE' in os.environ:
+    os.environ['WONJIN_PUBLISH_MOVIE'] += os.pathsep + 'PUBLISH_MOVIE_LOADING'
+else:
+    os.environ['WONJIN_PUBLISH_MOVIE'] = 'PUBLISH_MOVIE_LOADING'
 class UnrealMoviePublishPlugin(HookBaseClass):
     """
     Plugin for publishing an Unreal sequence as a rendered movie file.
@@ -38,7 +42,13 @@ class UnrealMoviePublishPlugin(HookBaseClass):
     To learn more about writing a publisher plugin, visit
     http://developer.shotgunsoftware.com/tk-multi-publish2/plugin.html
     """
-
+    def __init__(self, *args, **kwargs):
+        super(UnrealMoviePublishPlugin, self).__init__(*args, **kwargs)
+        print("PUBLISH_MOVIE INIT")
+        if 'WONJIN_PUBLISH_MOVIE' in os.environ:
+            os.environ['WONJIN_PUBLISH_MOVIE'] += os.pathsep + 'PUBLISH_MOVIE_INIT'
+        else:
+            os.environ['WONJIN_PUBLISH_MOVIE'] = 'PUBLISH_MOVIE_INIT'
     # NOTE: The plugin icon and name are defined by the base file plugin.
 
     @property
