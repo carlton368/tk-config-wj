@@ -3,7 +3,7 @@
 # file included in this repository.
 
 import sgtk
-
+import os
 HookBaseClass = sgtk.get_hook_baseclass()
 
 print("PUBLISH_SESSION LOADING")
