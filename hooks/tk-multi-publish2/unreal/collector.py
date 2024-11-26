@@ -1,13 +1,19 @@
-import os
+# This file is based on templates provided and copyrighted by Autodesk, Inc.
+# This file has been modified by Epic Games, Inc. and is subject to the license
+# file included in this repository.
+
 from collections import namedtuple, defaultdict
 import copy
+import os
 
 import unreal
+
 import sgtk
 
 # A named tuple to store LevelSequence edits: the sequence/track/section
 # the edit is in.
 SequenceEdit = namedtuple("SequenceEdit", ["sequence", "track", "section"])
+
 
 HookBaseClass = sgtk.get_hook_baseclass()
 
@@ -16,13 +22,17 @@ if 'WONJIN_COLLECTOR' in os.environ:
     os.environ['WONJIN_COLLECTOR'] += os.pathsep + 'COLLECTOR_LOADING'
 else:
     os.environ['WONJIN_COLLECTOR'] = 'COLLECTOR_LOADING'
-
 class UnrealSessionCollector(HookBaseClass):
     """
-    Collector that operates on the current unreal session. Should inherit from the basic
+    Collector that operates on the Unreal session. Should inherit from the basic
     collector hook.
+
+    You can read more about collectors here:
+    http://developer.shotgunsoftware.com/tk-multi-publish2/collector.html
+
+    Here's Maya's implementation for reference:
+    https://github.com/shotgunsoftware/tk-maya/blob/master/hooks/tk-multi-publish2/basic/collector.py
     """
-    
     def __init__(self, *args, **kwargs):
         super(UnrealSessionCollector, self).__init__(*args, **kwargs)
         print("COLLECTOR INIT")
@@ -30,25 +40,46 @@ class UnrealSessionCollector(HookBaseClass):
             os.environ['WONJIN_COLLECTOR'] += os.pathsep + 'COLLECTOR_INIT'
         else:
             os.environ['WONJIN_COLLECTOR'] = 'COLLECTOR_INIT'
-
+            
     @property
     def settings(self):
         """
         Dictionary defining the settings that this collector expects to receive
         through the settings parameter in the process_current_session and
         process_file methods.
+
+        A dictionary on the following form::
+
+            {
+                "Settings Name": {
+                    "type": "settings_type",
+                    "default": "default_value",
+                    "description": "One line description of the setting"
+            }
+
+        The type string should be one of the data types that toolkit accepts as
+        part of its environment configuration.
         """
-        settings = super(UnrealSessionCollector, self).settings
-        settings.update({
+
+        # grab any base class settings
+        collector_settings = super(UnrealSessionCollector, self).settings or {}
+
+        # Add setting specific to this collector.
+        work_template_setting = {
             "Work Template": {
                 "type": "template",
                 "default": None,
                 "description": "Template path for artist work files. Should "
-                "correspond to a template defined in "
-                "templates.yml.",
+                               "correspond to a template defined in "
+                               "templates.yml. If configured, is made available"
+                               "to publish plugins via the collected item's "
+                               "properties. ",
             },
-        })
-        return settings
+        }
+
+        collector_settings.update(work_template_setting)
+
+        return collector_settings
 
     def process_current_session(self, settings, parent_item):
         """
@@ -58,13 +89,10 @@ class UnrealSessionCollector(HookBaseClass):
         :param dict settings: Configured settings for this collector
         :param parent_item: Root item instance
         """
-        print("PROCESS SESSION")
-        if 'WONJIN_COLLECTOR' in os.environ:
-            os.environ['WONJIN_COLLECTOR'] += os.pathsep + 'PROCESS_SESSION'
-        else:
-            os.environ['WONJIN_COLLECTOR'] = 'PROCESS_SESSION'
-
+        # Create an item representing the current Unreal session
         parent_item = self.collect_current_session(settings, parent_item)
+
+        # Collect assets selected in Unreal
         self.collect_selected_assets(parent_item)
 
     def collect_current_session(self, settings, parent_item):
@@ -73,16 +101,15 @@ class UnrealSessionCollector(HookBaseClass):
 
         :param dict settings: Configured settings for this collector
         :param parent_item: Parent Item instance
-        """
-        print("COLLECT SESSION")
-        if 'WONJIN_COLLECTOR' in os.environ:
-            os.environ['WONJIN_COLLECTOR'] += os.pathsep + 'COLLECT_SESSION'
-        else:
-            os.environ['WONJIN_COLLECTOR'] = 'COLLECT_SESSION'
 
+        :returns: Item of type unreal.session
+        """
+        # Create the session item for the publish hierarchy
+        # In Unreal, the current session can be defined as the current level/map (.umap)
+        # Don't create a session item for now since the .umap does not need to be published
         session_item = parent_item
 
-        # get the icon path to display for this item
+        # Get the icon path to display for this item
         icon_path = os.path.join(
             self.disk_location,
             os.pardir,
@@ -90,9 +117,11 @@ class UnrealSessionCollector(HookBaseClass):
             "unreal.png"
         )
 
+        # Set the icon for the session item
+        # Will also be used for the children items parented to the session item
         session_item.set_icon_from_path(icon_path)
 
-        # get the project root
+        # Set the project root
         unreal_sg = sgtk.platform.current_engine().unreal_sg_engine
         project_root = unreal_sg.get_shotgun_work_dir()
 
@@ -120,35 +149,6 @@ class UnrealSessionCollector(HookBaseClass):
 
         return session_item
 
-    def collect_selected_assets(self, parent_item):
-        """
-        Creates items for assets selected in Unreal.
-
-        :param parent_item: Parent Item instance
-        """
-        print("COLLECT ASSETS")
-        if 'WONJIN_COLLECTOR' in os.environ:
-            os.environ['WONJIN_COLLECTOR'] += os.pathsep + 'COLLECT_ASSETS'
-        else:
-            os.environ['WONJIN_COLLECTOR'] = 'COLLECT_ASSETS'
-
-        unreal_sg = sgtk.platform.current_engine().unreal_sg_engine
-        sequence_edits = None
-        
-        # Iterate through the selected assets and get their info and add them as items to be published
-        for asset in unreal_sg.selected_assets:
-            if asset.asset_class_path.asset_name == "LevelSequence":
-                if sequence_edits is None:
-                    sequence_edits = self.retrieve_sequence_edits()
-                self.collect_level_sequence(parent_item, asset, sequence_edits)
-            else:
-                self.create_asset_item(
-                    parent_item,
-                    "%s" % unreal_sg.object_path(asset),
-                    "%s" % asset.asset_class_path.asset_name,
-                    "%s" % asset.asset_name,
-                )
-
     def create_asset_item(self, parent_item, asset_path, asset_type, asset_name, display_name=None):
         """
         Create an unreal item under the given parent item.
@@ -166,11 +166,35 @@ class UnrealSessionCollector(HookBaseClass):
             display_name or asset_name,  # Display name of item instance
         )
 
-        # set asset properties which can be used by publish plugins
+        # Set asset properties which can be used by publish plugins
         asset_item.properties["asset_path"] = asset_path
         asset_item.properties["asset_name"] = asset_name
         asset_item.properties["asset_type"] = asset_type
         return asset_item
+
+    def collect_selected_assets(self, parent_item):
+        """
+        Creates items for assets selected in Unreal.
+
+        :param parent_item: Parent Item instance
+        """
+        unreal_sg = sgtk.platform.current_engine().unreal_sg_engine
+        sequence_edits = None
+        # Iterate through the selected assets and get their info and add them as items to be published
+        for asset in unreal_sg.selected_assets:
+            if asset.asset_class_path.asset_name == "LevelSequence":
+                if sequence_edits is None:
+                    sequence_edits = self.retrieve_sequence_edits()
+                self.collect_level_sequence(parent_item, asset, sequence_edits)
+            else:
+                self.create_asset_item(
+                    parent_item,
+                    # :class:`Name` instances, we cast them to strings otherwise
+                    # string operations fail down the line..
+                    "%s" % unreal_sg.object_path(asset),
+                    "%s" % asset.asset_class_path.asset_name,
+                    "%s" % asset.asset_name,
+                )
 
     def get_all_paths_from_sequence(self, level_sequence, sequence_edits, visited=None):
         """
@@ -182,6 +206,16 @@ class UnrealSessionCollector(HookBaseClass):
         Lists of Level Sequences are returned, where each list contains all the
         the Level Sequences to traverse to reach the top Level Sequence from the
         starting Level Sequence.
+
+        For example if a master Level Sequence contains some `Seq_<seq number>`
+        sequences and each of them contains shots like `Shot_<seq number>_<shot number>`,
+        a path for Shot_001_010 would be `[Shot_001_010, Seq_001, Master sequence]`.
+
+        If an alternate Cut is maintained with another master level Sequence, both
+        paths would be detected and returned by this method, e.g.
+        `[[Shot_001_010, Seq_001, Master sequence], [Shot_001_010, Seq_001, Master sequence 2]]`
+
+        Maintain a list of visited Level Sequences to detect cycles.
 
         :param level_sequence: A :class:`unreal.LevelSequence` instance.
         :param sequence_edits: A dictionary with  :class:`unreal.LevelSequence as keys and
