@@ -34,5 +34,5 @@ settings.tk-unreal.project:
   - {app_instance: tk-multi-pythonconsole, name: 'Python Console...'}
   run_at_startup:
   - {app_instance: tk-multi-shotgunpanel, name: ''}
-  launch_builtin_plugins: []
+  launch_builtin_plugins: [basic]
   automatic_context_switch: false
