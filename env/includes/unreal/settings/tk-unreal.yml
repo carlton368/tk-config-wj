@@ -29,7 +29,7 @@ settings.tk-unreal.project:
   location: "@tk-unreal.location"
   menu_favourites:
   - {app_instance: tk-multi-loader2, name: 'Flow Production Tracking Loader...'}
-  - {app_instance: tk-multi-publish2, name: 'Publish...'}
+  - {app_instance: tk-multi-publish2, name: 'Publish...2'}
   - {app_instance: tk-multi-shotgunpanel, name: 'Shotgun Panel...'}
   - {app_instance: tk-multi-pythonconsole, name: 'Flow Production Tracking Python Console...'}
   run_at_startup:
