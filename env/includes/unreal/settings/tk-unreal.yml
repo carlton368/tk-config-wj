@@ -28,11 +28,8 @@ settings.tk-unreal.project:
     tk-multi-shotgunpanel: "@settings.tk-multi-shotgunpanel.unreal"
   location: "@tk-unreal.location"
   menu_favourites:
-  - {app_instance: tk-multi-loader2, name: 'Loader...'}
   - {app_instance: tk-multi-publish2, name: 'Publish...'}
-  - {app_instance: tk-multi-shotgunpanel, name: 'Shotgun Panel...'}
-  - {app_instance: tk-multi-pythonconsole, name: 'Python Console...'}
   run_at_startup:
   - {app_instance: tk-multi-shotgunpanel, name: ''}
-  launch_builtin_plugins: [basic]
+  launch_builtin_plugins: []
   automatic_context_switch: false
