@@ -32,5 +32,5 @@ settings.tk-unreal.project:
   - {app_instance: tk-multi-publish2, name: 'Publish...'}
   run_at_startup:
   - {app_instance: tk-multi-shotgunpanel, name: ''}
-  launch_builtin_plugins: []
+  launch_builtin_plugins: [all]
   automatic_context_switch: false
