@@ -95,28 +95,6 @@ class UnrealSessionCollector(HookBaseClass):
         # Collect assets selected in Unreal
         self.collect_selected_assets(parent_item)
         
-        # Add movie publish item when in project context
-        if self.parent.context.project and not self.parent.context.entity:
-            movie_item = parent_item.create_item(
-                "unreal.session.movie",
-                "Movie",
-                "Unreal Movie"
-            )
-            
-            # Set the icon path to display for this item
-            icon_path = os.path.join(
-                self.disk_location,
-                os.pardir,
-                "icons",
-                "unreal.png"
-            )
-            movie_item.set_icon_from_path(icon_path)
-            
-            # Set necessary properties
-            movie_item.properties["project_root"] = parent_item.properties["project_root"]
-            if "work_template" in parent_item.properties:
-                movie_item.properties["work_template"] = parent_item.properties["work_template"]
-
     def collect_current_session(self, settings, parent_item):
         """
         Creates an item that represents the current Unreal session.
